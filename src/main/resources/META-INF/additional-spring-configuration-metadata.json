@@ -1,0 +1,24 @@
+{
+  "properties": [
+    {
+      "name": "openai.api.key",
+      "type": "java.lang.String",
+      "description": "Api key to use GPT models through OpenAI's api."
+    },
+    {
+      "name": "azure.vision.api.key",
+      "type": "java.lang.String",
+      "description": "Api key to use Cognitive Vision image analysis capabilities from Microsoft Azure's cognitive vision api."
+    },
+    {
+      "name": "azure.vision.api.endpoint",
+      "type": "java.lang.String",
+      "description": "Endpoint to send api request to for utilising Microsoft Azure's cognitive vision api."
+    },
+    {
+      "name": "file.upload-dir",
+      "type": "java.lang.String",
+      "description": "Directory path within the project where all multi-part form files will be stored."
+    }
+  ]
+}
