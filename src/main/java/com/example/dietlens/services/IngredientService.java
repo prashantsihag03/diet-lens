@@ -1,7 +1,10 @@
 package com.example.dietlens.services;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -15,9 +18,10 @@ import java.util.stream.Collectors;
 import org.springframework.boot.configurationprocessor.json.JSONArray;
 import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeTypeUtils;
-import org.springframework.util.ResourceUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.azure.ai.vision.imageanalysis.ImageAnalysisClient;
@@ -47,6 +51,7 @@ import dev.langchain4j.model.openai.OpenAiChatModelName;
 
 @Service
 public class IngredientService {
+  private final ResourceLoader resourceLoader;
 
   // private final BedrockMistralAiChatModel model;
   private final ChatLanguageModel openAiModel;
@@ -71,12 +76,12 @@ public class IngredientService {
     return true;
   }
 
-  public IngredientService(Environment environment) throws IOException {
+  public IngredientService(Environment environment, ResourceLoader resourceLoader) throws IOException {
+    this.resourceLoader = resourceLoader;
     OPEN_AI_API_KEY = environment.getRequiredProperty("openai.api.key", String.class);
     AZ_VISION_KEY = environment.getRequiredProperty("azure.vision.api.key", String.class);
     AZ_VISION_ENDPOINT = environment.getRequiredProperty("azure.vision.api.endpoint", String.class);
-
-    prompt = new String(Files.readAllBytes(ResourceUtils.getFile("classpath:prompt.txt").toPath()));
+    prompt = this.getPrompt();
 
     // AwsCredentialsProvider awsCredentials =
     // EnvironmentVariableCredentialsProvider.create();
@@ -101,6 +106,24 @@ public class IngredientService {
             AZ_VISION_KEY))
         .buildClient();
 
+  }
+
+  public String getPrompt() {
+    Resource resource = resourceLoader.getResource("classpath:prompt.txt");
+    StringBuilder content = new StringBuilder();
+
+    try (InputStream inputStream = resource.getInputStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+
+      String line;
+      while ((line = reader.readLine()) != null) {
+        content.append(line).append(System.lineSeparator());
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    return content.toString();
   }
 
   public IngredientExplanationResultDTO explainIngredient(MultipartFile image)
