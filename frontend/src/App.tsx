@@ -58,6 +58,13 @@ function App() {
           setStatusColor("maroon");
           return;
         }
+        if (response.status === 415) {
+          setAnalysisStatus(
+            "Unsupported media type provided. Please try again with 'jpg', 'jpeg', or 'png' image."
+          );
+          setStatusColor("maroon");
+          return;
+        }
         setAnalysisStatus("Failed. Please try again");
         setStatusColor("maroon");
       }
@@ -217,27 +224,32 @@ function App() {
             flexDirection: "row",
             justifyContent: "left",
             gap: 5,
+            flexWrap: "wrap",
             alignItems: "center",
           }}
         >
           <h1
             style={{
+              margin: "0",
+              padding: "0",
               fontSize: "1.3rem",
               fontWeight: "bold",
               fontFamily: "'Krona One', sans-serif",
             }}
           >
-            DIET LENS |
+            DIET LENS
           </h1>
           <h2
             style={{
+              margin: "0",
+              padding: "0",
               fontSize: "0.8rem",
               fontWeight: "normal",
               fontFamily: "Michroma, sans-serif",
               letterSpacing: "1.5pt",
             }}
           >
-            {" "}
+            {" * "}
             AI Ingredient Analyzer
           </h2>
         </div>
@@ -274,18 +286,19 @@ function App() {
               {analysisStatus}
               {statusColor === "maroon" ? (
                 <>
-                  <br />
+                  {". "}
                   <a
                     onClick={() => {
                       reset();
                     }}
                     style={{
                       letterSpacing: "1pt",
-                      fontSize: "0.8rem",
+                      fontSize: "0.6rem",
                       textDecorationLine: "underline",
+                      color: "skyblue",
                     }}
                   >
-                    retry
+                    Retry
                   </a>
                 </>
               ) : null}
@@ -442,20 +455,31 @@ function App() {
       ) : (
         <div
           style={{
-            width: "80%",
+            width: "90%",
             height: "85%",
             margin: "auto",
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
             alignItems: "center",
+            letterSpacing: "1pt",
           }}
         >
           <p>
             Upload a picture of ingredients list on any food package to find out
             each ingredient’s health information.
           </p>
-          <input type="file" accept="image/*" onChange={fileInputHandler} />
+          <p style={{ fontSize: "0.6rem" }}>
+            Supported image formats are "jpg", "jpeg" or "png" with file size no
+            more than 2 MB.
+          </p>
+
+          <input
+            type="file"
+            accept="image/jpg, image/jpeg, image/png"
+            onChange={fileInputHandler}
+            style={{ textAlign: "center", padding: "1rem", color: "steelblue" }}
+          />
         </div>
       )}
       <footer

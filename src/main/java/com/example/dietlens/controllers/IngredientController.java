@@ -31,8 +31,12 @@ class IngredientController {
     public ResponseEntity<IngredientExplanationResultDTO> getIngredientExplaination(
             @RequestPart MultipartFile file) throws IOException {
         if (bucket.tryConsume(1)) {
-            return ResponseEntity.ok(ingredientService.explainIngredient(file));
+            if (ingredientService.isFileFormatSupported(file)) {
+                return ResponseEntity.ok(ingredientService.explainIngredient(file));
+            }
+            throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                    "Unsupported media type provided. Please try again with 'jpg', 'jpeg', or 'png' image.");
         }
-        throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Too many requests - please try again later");
+        throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Too many requests. Please try again later");
     }
 }

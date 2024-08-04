@@ -10,11 +10,13 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.boot.configurationprocessor.json.JSONArray;
 import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.core.env.Environment;
@@ -45,9 +47,11 @@ import dev.langchain4j.data.message.ImageContent.DetailLevel;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModelName;
+import kotlin.collections.builders.ListBuilder;
 // import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 // import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 // import software.amazon.awssdk.regions.Region;
+import lombok.Getter;
 
 @Service
 public class IngredientService {
@@ -62,6 +66,9 @@ public class IngredientService {
   private final String OPEN_AI_API_KEY;
 
   private final String prompt;
+
+  @Getter
+  private final List<String> supportedImageFormat = Arrays.asList("jpg", "jpeg", "png");
 
   public static boolean isValidJSON(String jsonString) {
     try {
@@ -199,4 +206,11 @@ public class IngredientService {
     return combinedResult;
   }
 
+  public boolean isFileFormatSupported(MultipartFile file) {
+    String originalFilename = file.getOriginalFilename();
+    if (originalFilename != null) {
+      return supportedImageFormat.contains(FilenameUtils.getExtension(originalFilename));
+    }
+    return false;
+  }
 }
