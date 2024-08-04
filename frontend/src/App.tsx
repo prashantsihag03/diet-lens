@@ -19,6 +19,8 @@ interface IngredientsHealthData {
 function App() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showFullDetail, setShowFullDetail] = useState<boolean>(false);
+  const [analysisStatus, setAnalysisStatus] = useState<string | null>(null);
+  const [statusColor, setStatusColor] = useState<"green" | "maroon">("green");
   const [ingredientMetricNames] = useState<string[]>([
     "banned_in",
     "preservative",
@@ -30,6 +32,7 @@ function App() {
     useState<IngredientsHealthData | null>(null);
 
   const analyseIngredients = async (file: File) => {
+    setAnalysisStatus(null);
     const formData = new FormData();
     formData.append("file", file);
 
@@ -44,12 +47,24 @@ function App() {
         if (result.ingredientHealthData != null) {
           setIngredientHealthData(result.ingredientHealthData);
         }
-        console.log("File uploaded successfully:", result);
+        setAnalysisStatus("Successfull. See result below");
+        setStatusColor("green");
+        return;
       } else {
-        console.error("File upload failed:", response.statusText);
+        if (response.status === 429) {
+          setAnalysisStatus(
+            "Too many requests. Please try again after some time."
+          );
+          setStatusColor("maroon");
+          return;
+        }
+        setAnalysisStatus("Failed. Please try again");
+        setStatusColor("maroon");
       }
     } catch (error) {
       console.error("Error:", error);
+      setAnalysisStatus("Error. Please try again later.");
+      setStatusColor("maroon");
     }
   };
 
@@ -212,7 +227,7 @@ function App() {
               fontFamily: "'Krona One', sans-serif",
             }}
           >
-            DIET HUB |
+            DIET LENS |
           </h1>
           <h2
             style={{
@@ -243,6 +258,39 @@ function App() {
             position: "relative",
           }}
         >
+          {analysisStatus != null ? (
+            <p
+              style={{
+                position: "absolute",
+                padding: "1rem",
+                zIndex: 1000,
+                backgroundColor: statusColor,
+                borderRadius: "7px",
+                fontSize: "0.6rem",
+                letterSpacing: "1pt",
+                top: 0,
+              }}
+            >
+              {analysisStatus}
+              {statusColor === "maroon" ? (
+                <>
+                  <br />
+                  <a
+                    onClick={() => {
+                      reset();
+                    }}
+                    style={{
+                      letterSpacing: "1pt",
+                      fontSize: "0.8rem",
+                      textDecorationLine: "underline",
+                    }}
+                  >
+                    retry
+                  </a>
+                </>
+              ) : null}
+            </p>
+          ) : null}
           {ingredientHealthData && showFullDetail ? (
             <div
               style={{
@@ -330,7 +378,9 @@ function App() {
                 opacity: "0.5",
                 borderRadius: "7px",
                 animation:
-                  ingredientHealthData == null ? "fade 3s infinite" : undefined,
+                  ingredientHealthData == null && analysisStatus == null
+                    ? "fade 3s infinite"
+                    : undefined,
               }}
             />
           </div>
@@ -346,18 +396,21 @@ function App() {
                 }}
               >
                 <button
-                  style={{ fontSize: "0.6rem" }}
+                  style={{ fontSize: "0.6rem", letterSpacing: "1pt" }}
                   onClick={() => {
                     setShowFullDetail(true);
                   }}
                 >
                   Full Result
                 </button>
-                <button style={{ fontSize: "0.6rem" }} onClick={reset}>
+                <button
+                  style={{ fontSize: "0.6rem", letterSpacing: "1pt" }}
+                  onClick={reset}
+                >
                   New
                 </button>
                 <button
-                  style={{ fontSize: "0.6rem" }}
+                  style={{ fontSize: "0.6rem", letterSpacing: "1pt" }}
                   onClick={async () => {
                     setShowFullDetail(false);
                     setIngredientHealthData(null);
