@@ -25,7 +25,15 @@ td {
   padding-bottom: '0.25rem';
 }
 
+.metricRow {
+  font-size: 0.7rem; 
+  background-color: #212020;
+}
 
+.metricRow:hover {
+  cursor: pointer;
+  background-color: #2d2c2c;
+}
 
 /* .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);

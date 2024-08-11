@@ -2,6 +2,8 @@
 
 DietLens is an innovative AI-powered platform designed to revolutionize the way you understand and manage your diet. Empowering individuals to make informed dietary choices and maintain a healthier lifestyle through advanced technology and seamless user experience.
 
+<a href="https://diet-lens-4ac25c71bf32.herokuapp.com/"><b>Live Deployment</b></a>
+
 # File Setup Description
 
 The project is built using Springboot and React. The root repository is a springboot project and all frontend code is located within "frontend" directory. Frontend is built using Vite with React and Typescript.

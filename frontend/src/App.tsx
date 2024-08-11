@@ -1,32 +1,18 @@
 import { ChangeEvent, useState } from "react";
-import github from "./assets/github.svg";
 import "./App.css";
-
-interface IngredientHealthData {
-  ingredient: string;
-  health_score: string;
-  explanation: string;
-  banned_in: string[];
-  preservative: boolean;
-  causes_allergic_reaction: boolean;
-  causes_digestive_issues: boolean;
-}
-
-interface IngredientsHealthData {
-  [ingredientName: string]: IngredientHealthData;
-}
+import Footer from "./Footer";
+import IngredientAnalyserForm from "./IngredientAnalyserForm";
+import Header from "./Header";
+import AnalysisStatus from "./AnalysisStatus";
+import AnalysisFullTable, { IngredientsHealthData } from "./AnalysisFullTable";
+import ImageDisplay from "./ImageDisplay";
+import AnalysisMetrics from "./AnalysisMetrics";
 
 function App() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showFullDetail, setShowFullDetail] = useState<boolean>(false);
   const [analysisStatus, setAnalysisStatus] = useState<string | null>(null);
   const [statusColor, setStatusColor] = useState<"green" | "maroon">("green");
-  const [ingredientMetricNames] = useState<string[]>([
-    "banned_in",
-    "preservative",
-    "causes_allergic_reaction",
-    "causes_digestive_issues",
-  ]);
 
   const [ingredientHealthData, setIngredientHealthData] =
     useState<IngredientsHealthData | null>(null);
@@ -47,8 +33,7 @@ function App() {
         if (result.ingredientHealthData != null) {
           setIngredientHealthData(result.ingredientHealthData);
         }
-        setAnalysisStatus("Successfull. See result below");
-        setStatusColor("green");
+        setAnalysisStatus(null);
         return;
       } else {
         if (response.status === 429) {
@@ -69,7 +54,6 @@ function App() {
         setStatusColor("maroon");
       }
     } catch (error) {
-      console.error("Error:", error);
       setAnalysisStatus("Error. Please try again later.");
       setStatusColor("maroon");
     }
@@ -86,120 +70,6 @@ function App() {
     }
   };
 
-  const getIngredientMetricValue = (ingredientMetricName: string) => {
-    if (ingredientHealthData == null) return;
-
-    if (ingredientMetricName === "banned_in") {
-      let totalBannedIngredients = 0;
-      Object.keys(ingredientHealthData).forEach((ingredientName) => {
-        if (ingredientHealthData[ingredientName].banned_in.length > 0) {
-          totalBannedIngredients = totalBannedIngredients + 1;
-        }
-      });
-      return (
-        <tr style={{ fontSize: "0.7rem" }}>
-          <td style={{ textAlign: "left" }}>No. of banned ingredients:</td>
-          <td style={{ textAlign: "center" }}>{totalBannedIngredients}</td>
-        </tr>
-      );
-    }
-
-    if (ingredientMetricName === "preservative") {
-      let totalPreservativeIngredients = 0;
-      Object.keys(ingredientHealthData).forEach((ingredientName) => {
-        if (ingredientHealthData[ingredientName].preservative === true) {
-          totalPreservativeIngredients = totalPreservativeIngredients + 1;
-        }
-      });
-      return (
-        <tr style={{ fontSize: "0.7rem" }}>
-          <td style={{ textAlign: "left" }}>No. of Preservatives:</td>
-          <td style={{ textAlign: "center" }}>
-            {totalPreservativeIngredients}
-          </td>
-        </tr>
-      );
-    }
-
-    if (ingredientMetricName === "causes_allergic_reaction") {
-      let totalAllergicIngredients = 0;
-      Object.keys(ingredientHealthData).forEach((ingredientName) => {
-        if (
-          ingredientHealthData[ingredientName].causes_allergic_reaction === true
-        ) {
-          totalAllergicIngredients = totalAllergicIngredients + 1;
-        }
-      });
-      return (
-        <tr style={{ fontSize: "0.7rem" }}>
-          <td style={{ textAlign: "left" }}>No. of Potential Allergens:</td>
-          <td style={{ textAlign: "center" }}>{totalAllergicIngredients}</td>
-        </tr>
-      );
-    }
-
-    if (ingredientMetricName === "causes_digestive_issues") {
-      let totalDigestiveIssueIngredients = 0;
-      Object.keys(ingredientHealthData).forEach((ingredientName) => {
-        if (
-          ingredientHealthData[ingredientName].causes_digestive_issues === true
-        ) {
-          totalDigestiveIssueIngredients = totalDigestiveIssueIngredients + 1;
-        }
-      });
-      return (
-        <tr style={{ fontSize: "0.7rem" }}>
-          <td style={{ textAlign: "left" }}>No. of Digestive Irritants:</td>
-          <td style={{ textAlign: "center" }}>
-            {totalDigestiveIssueIngredients}
-          </td>
-        </tr>
-      );
-    }
-
-    return null;
-  };
-
-  const getIngredientFullRecord = (ingredientName: string) => {
-    if (ingredientHealthData == null) return null;
-    console.log("adding record for ", ingredientName);
-
-    return (
-      <tr
-        style={{
-          fontSize: "0.6rem",
-          marginBottom: "0.25rem",
-          marginTop: "0.25rem",
-        }}
-      >
-        <td
-          style={{ textAlign: "center" }}
-          title={ingredientHealthData[ingredientName].explanation}
-        >
-          {ingredientName}
-        </td>
-        <td style={{ textAlign: "center" }}>
-          {ingredientHealthData[ingredientName].health_score}
-        </td>
-        <td style={{ textAlign: "center" }}>
-          {`${ingredientHealthData[ingredientName].preservative}`}
-        </td>
-        <td
-          style={{ textAlign: "center" }}
-          title={`${ingredientHealthData[ingredientName].banned_in.join(", ")}`}
-        >
-          {`${ingredientHealthData[ingredientName].banned_in.length}`}
-        </td>
-        <td style={{ textAlign: "center" }}>
-          {`${ingredientHealthData[ingredientName].causes_allergic_reaction}`}
-        </td>
-        <td style={{ textAlign: "center" }}>
-          {`${ingredientHealthData[ingredientName].causes_digestive_issues}`}
-        </td>
-      </tr>
-    );
-  };
-
   const reset = () => {
     setSelectedFile(null);
     setShowFullDetail(false);
@@ -208,54 +78,7 @@ function App() {
 
   return (
     <>
-      <div
-        style={{
-          width: "100%",
-          height: "10%",
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "left",
-            gap: 5,
-            flexWrap: "wrap",
-            alignItems: "center",
-          }}
-        >
-          <h1
-            style={{
-              margin: "0",
-              padding: "0",
-              fontSize: "1.3rem",
-              fontWeight: "bold",
-              fontFamily: "'Krona One', sans-serif",
-            }}
-          >
-            DIET LENS
-          </h1>
-          <h2
-            style={{
-              margin: "0",
-              padding: "0",
-              fontSize: "0.8rem",
-              fontWeight: "normal",
-              fontFamily: "Michroma, sans-serif",
-              letterSpacing: "1.5pt",
-            }}
-          >
-            {" * "}
-            AI Ingredient Analyzer
-          </h2>
-        </div>
-        <img src={github} width={"30px"} height={"30px"} />
-      </div>
-
+      <Header />
       {selectedFile ? (
         <div
           style={{
@@ -271,134 +94,31 @@ function App() {
           }}
         >
           {analysisStatus != null ? (
-            <p
-              style={{
-                position: "absolute",
-                padding: "1rem",
-                zIndex: 1000,
-                backgroundColor: statusColor,
-                borderRadius: "7px",
-                fontSize: "0.6rem",
-                letterSpacing: "1pt",
-                top: 0,
-              }}
-            >
-              {analysisStatus}
-              {statusColor === "maroon" ? (
-                <>
-                  {". "}
-                  <a
-                    onClick={() => {
-                      reset();
-                    }}
-                    style={{
-                      letterSpacing: "1pt",
-                      fontSize: "0.6rem",
-                      textDecorationLine: "underline",
-                      color: "skyblue",
-                    }}
-                  >
-                    Retry
-                  </a>
-                </>
-              ) : null}
-            </p>
-          ) : null}
-          {ingredientHealthData && showFullDetail ? (
-            <div
-              style={{
-                position: "absolute",
-                top: "0",
-                left: "0",
-                height: "100%",
-                width: "100%",
-                overflow: "scroll",
-                backgroundColor: "black",
-                zIndex: 1000,
-                padding: "1rem",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "1rem",
-                }}
-              >
-                <p style={{ fontSize: "1rem" }}>Full Analysis Result: </p>
-                <button
-                  style={{ fontSize: "0.6rem" }}
-                  onClick={() => {
-                    setShowFullDetail(false);
-                  }}
-                >
-                  Close
-                </button>
-              </div>
-              <table style={{ flex: 1, width: "100%", borderRadius: "7px" }}>
-                <tr
-                  style={{
-                    borderBottom: "1px solid white",
-                    fontSize: "0.6rem",
-                    color: "#4fccff",
-                    letterSpacing: "1pt",
-                    marginBottom: "0.25rem",
-                    marginTop: "0.25rem",
-                  }}
-                >
-                  <th style={{ textAlign: "center", fontWeight: "bold" }}>
-                    Ingredient
-                  </th>
-                  <th style={{ textAlign: "center", fontWeight: "bold" }}>
-                    Score
-                  </th>
-                  <th style={{ textAlign: "center", fontWeight: "bold" }}>
-                    Preservative
-                  </th>
-                  <th style={{ textAlign: "center", fontWeight: "bold" }}>
-                    Banned
-                  </th>
-                  <th style={{ textAlign: "center", fontWeight: "bold" }}>
-                    Allergen
-                  </th>
-                  <th style={{ textAlign: "center", fontWeight: "bold" }}>
-                    Digestive Irritant
-                  </th>
-                </tr>
-                {Object.keys(ingredientHealthData).map((ingredientName) => {
-                  return getIngredientFullRecord(ingredientName);
-                })}
-              </table>
-            </div>
+            <AnalysisStatus
+              color={statusColor}
+              status={analysisStatus}
+              actionHandler={reset}
+              actiontext="Retry"
+            />
           ) : null}
 
-          <div
-            style={{
-              position: "relative",
-              flex: 1,
-              height: "70vh",
-              objectFit: "contain",
-            }}
-          >
-            <img
-              src={URL.createObjectURL(selectedFile)}
-              width={"100%"}
-              height={"100%"}
-              style={{
-                objectFit: "contain",
-                opacity: "0.5",
-                borderRadius: "7px",
-                animation:
-                  ingredientHealthData == null && analysisStatus == null
-                    ? "fade 3s infinite"
-                    : undefined,
+          {ingredientHealthData && showFullDetail ? (
+            <AnalysisFullTable
+              ingredientHealthData={ingredientHealthData}
+              onClose={() => {
+                setShowFullDetail(false);
               }}
             />
-          </div>
+          ) : null}
+
+          <ImageDisplay
+            animate={ingredientHealthData == null && analysisStatus == null}
+            imgFile={selectedFile}
+          />
+
           {ingredientHealthData ? (
             <div style={{ flex: 1 }}>
+              <AnalysisMetrics ingredientHealthData={ingredientHealthData} />
               <div
                 style={{
                   display: "flex",
@@ -406,6 +126,7 @@ function App() {
                   justifyContent: "center",
                   alignItems: "center",
                   gap: 5,
+                  paddingTop: "3rem",
                 }}
               >
                 <button
@@ -433,67 +154,13 @@ function App() {
                   Retry
                 </button>
               </div>
-              <p
-                style={{
-                  width: "100%",
-                  color: "skyblue",
-                  fontSize: "0.8rem",
-                  textAlign: "center",
-                  letterSpacing: "1pt",
-                }}
-              >
-                Statistics:
-              </p>
-              <table style={{ margin: "auto", letterSpacing: "1pt" }}>
-                {ingredientMetricNames.map((ingredientMetricName) => {
-                  return getIngredientMetricValue(ingredientMetricName);
-                })}
-              </table>
             </div>
           ) : null}
         </div>
       ) : (
-        <div
-          style={{
-            width: "90%",
-            height: "85%",
-            margin: "auto",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            letterSpacing: "1pt",
-          }}
-        >
-          <p>
-            Upload a picture of ingredients list on any food package to find out
-            each ingredient’s health information.
-          </p>
-          <p style={{ fontSize: "0.6rem" }}>
-            Supported image formats are "jpg", "jpeg" or "png" with file size no
-            more than 2 MB.
-          </p>
-
-          <input
-            type="file"
-            accept="image/jpg, image/jpeg, image/png"
-            onChange={fileInputHandler}
-            style={{ textAlign: "center", padding: "1rem", color: "steelblue" }}
-          />
-        </div>
+        <IngredientAnalyserForm fileInputHandler={fileInputHandler} />
       )}
-      <footer
-        style={{
-          maxHeight: "5%",
-          overflow: "hidden",
-          fontSize: "0.7rem",
-          letterSpacing: "1pt",
-        }}
-      >
-        <p>
-          built by <a href="https://prashantsihag.com">Prashant Sihag</a>
-        </p>
-      </footer>
+      <Footer />
     </>
   );
 }

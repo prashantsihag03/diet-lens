@@ -5,11 +5,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+// import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.HashMap;
+// import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -25,15 +25,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.azure.ai.vision.imageanalysis.ImageAnalysisClient;
-import com.azure.ai.vision.imageanalysis.ImageAnalysisClientBuilder;
-import com.azure.ai.vision.imageanalysis.models.DetectedTextLine;
-import com.azure.ai.vision.imageanalysis.models.ImageAnalysisOptions;
-import com.azure.ai.vision.imageanalysis.models.ImageAnalysisResult;
-import com.azure.ai.vision.imageanalysis.models.ImagePoint;
-import com.azure.ai.vision.imageanalysis.models.VisualFeatures;
-import com.azure.core.credential.KeyCredential;
-import com.azure.core.util.BinaryData;
+// import com.azure.ai.vision.imageanalysis.ImageAnalysisClient;
+// import com.azure.ai.vision.imageanalysis.ImageAnalysisClientBuilder;
+// import com.azure.ai.vision.imageanalysis.models.DetectedTextLine;
+// import com.azure.ai.vision.imageanalysis.models.ImageAnalysisOptions;
+// import com.azure.ai.vision.imageanalysis.models.ImageAnalysisResult;
+// import com.azure.ai.vision.imageanalysis.models.ImagePoint;
+// import com.azure.ai.vision.imageanalysis.models.VisualFeatures;
+// import com.azure.core.credential.KeyCredential;
+// import com.azure.core.util.BinaryData;
 import com.example.dietlens.DTOs.IngredientExplanationResultDTO;
 import com.example.dietlens.DTOs.IngredientHealthDataDTO;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -57,10 +57,10 @@ public class IngredientService {
 
   // private final BedrockMistralAiChatModel model;
   private final ChatLanguageModel openAiModel;
-  private final ImageAnalysisClient client;
+  // private final ImageAnalysisClient client;
 
-  private final String AZ_VISION_ENDPOINT;
-  private final String AZ_VISION_KEY;
+  // private final String AZ_VISION_ENDPOINT;
+  // private final String AZ_VISION_KEY;
   private final String OPEN_AI_API_KEY;
 
   private final String prompt;
@@ -84,8 +84,10 @@ public class IngredientService {
   public IngredientService(Environment environment, ResourceLoader resourceLoader) throws IOException {
     this.resourceLoader = resourceLoader;
     OPEN_AI_API_KEY = environment.getRequiredProperty("openai.api.key", String.class);
-    AZ_VISION_KEY = environment.getRequiredProperty("azure.vision.api.key", String.class);
-    AZ_VISION_ENDPOINT = environment.getRequiredProperty("azure.vision.api.endpoint", String.class);
+    // AZ_VISION_KEY = environment.getRequiredProperty("azure.vision.api.key",
+    // String.class);
+    // AZ_VISION_ENDPOINT =
+    // environment.getRequiredProperty("azure.vision.api.endpoint", String.class);
     prompt = this.getPrompt();
 
     // AwsCredentialsProvider awsCredentials =
@@ -104,12 +106,12 @@ public class IngredientService {
         .build();
 
     // Create a synchronous Image Analysis client.
-    client = new ImageAnalysisClientBuilder()
-        .endpoint(
-            AZ_VISION_ENDPOINT)
-        .credential(new KeyCredential(
-            AZ_VISION_KEY))
-        .buildClient();
+    // client = new ImageAnalysisClientBuilder()
+    // .endpoint(
+    // AZ_VISION_ENDPOINT)
+    // .credential(new KeyCredential(
+    // AZ_VISION_KEY))
+    // .buildClient();
 
   }
 
@@ -173,34 +175,38 @@ public class IngredientService {
         .collect(Collectors.toList());
 
     // This is a synchronous (blocking) call.
-    ImageAnalysisResult result1 = client.analyze(
-        BinaryData.fromBytes(
-            image.getBytes()),
-        Arrays.asList(VisualFeatures.READ),
-        new ImageAnalysisOptions());
+    // ImageAnalysisResult result1 = client.analyze(
+    // BinaryData.fromBytes(
+    // image.getBytes()),
+    // Arrays.asList(VisualFeatures.READ),
+    // new ImageAnalysisOptions());
 
     IngredientExplanationResultDTO combinedResult = new IngredientExplanationResultDTO();
     combinedResult.setIngredientHealthData(allIngredients);
 
-    Map<String, List<List<ImagePoint>>> boundingPoplygonsByWords = new HashMap<>();
-    List<String> detectedWords = new ArrayList<>();
+    // Map<String, List<List<ImagePoint>>> boundingPoplygonsByWords = new
+    // HashMap<>();
+    // List<String> detectedWords = new ArrayList<>();
 
-    for (DetectedTextLine line : result1.getRead().getBlocks().get(0).getLines()) {
-      line.getWords().forEach(word -> {
-        detectedWords.add(word.getText().trim().toLowerCase());
-        if (uniqueWords.contains(word.getText().trim().toLowerCase())) {
-          List<List<ImagePoint>> currBoundingPolygons = boundingPoplygonsByWords
-              .getOrDefault(word.getText().trim().toLowerCase(),
-                  new ArrayList<>());
-          currBoundingPolygons.add(word.getBoundingPolygon());
-          boundingPoplygonsByWords.put(word.getText(), currBoundingPolygons);
-        }
-      });
-    }
+    // for (DetectedTextLine line : result1.getRead().getBlocks().get(0).getLines())
+    // {
+    // line.getWords().forEach(word -> {
+    // detectedWords.add(word.getText().trim().toLowerCase());
+    // if (uniqueWords.contains(word.getText().trim().toLowerCase())) {
+    // List<List<ImagePoint>> currBoundingPolygons = boundingPoplygonsByWords
+    // .getOrDefault(word.getText().trim().toLowerCase(),
+    // new ArrayList<>());
+    // currBoundingPolygons.add(word.getBoundingPolygon());
+    // boundingPoplygonsByWords.put(word.getText(), currBoundingPolygons);
+    // }
+    // });
+    // }
 
-    combinedResult.setIngredientWordsboundingPolygons(boundingPoplygonsByWords);
+    // combinedResult.setIngredientWordsboundingPolygons(boundingPoplygonsByWords);
     combinedResult.setUniqueWords(uniqueWords);
-    combinedResult.setDetectedWords(detectedWords);
+    // combinedResult.setDetectedWords(detectedWords);
+    combinedResult.setIngredientWordsboundingPolygons(Collections.emptyMap());
+    combinedResult.setDetectedWords(Collections.emptyList());
     return combinedResult;
   }
 
