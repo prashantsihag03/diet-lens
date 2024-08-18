@@ -1,7 +1,5 @@
 package com.example.dietlens.controllers;
 
-import java.io.IOException;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,8 +17,8 @@ import io.github.bucket4j.Bucket;
 @RestController
 class IngredientController {
 
-    private IngredientService ingredientService;
-    private Bucket bucket;
+    private final IngredientService ingredientService;
+    private final Bucket bucket;
 
     public IngredientController(IngredientService ingredientService, Bucket bucket) {
         this.ingredientService = ingredientService;
@@ -28,14 +26,10 @@ class IngredientController {
     }
 
     @PostMapping(path = "/ingredient", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
-    public ResponseEntity<IngredientExplanationResultDTO> getIngredientExplaination(
-            @RequestPart MultipartFile file) throws IOException {
+    public ResponseEntity<IngredientExplanationResultDTO> getIngredientExplanation (
+            @RequestPart MultipartFile file) throws Exception {
         if (bucket.tryConsume(1)) {
-            if (ingredientService.isFileFormatSupported(file)) {
-                return ResponseEntity.ok(ingredientService.explainIngredient(file));
-            }
-            throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
-                    "Unsupported media type provided. Please try again with 'jpg', 'jpeg', or 'png' image.");
+            return ResponseEntity.ok(ingredientService.explainIngredient(file));
         }
         throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Too many requests. Please try again later");
     }
