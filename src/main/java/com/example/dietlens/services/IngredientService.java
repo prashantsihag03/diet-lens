@@ -7,11 +7,13 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 //import com.example.dietlens.DTOs.BoundingPolygonsByWordsDTO;
 import com.example.dietlens.Exceptions.AiResponseFailureException;
 import com.example.dietlens.Exceptions.UnsupportedMediaFileException;
+import com.fasterxml.jackson.core.JsonParseException;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.boot.configurationprocessor.json.JSONArray;
 import org.springframework.boot.configurationprocessor.json.JSONObject;
@@ -53,6 +55,7 @@ import lombok.Getter;
 
 @Service
 public class IngredientService {
+  private final Logger LOGGER = Logger.getLogger(IngredientService.class.toString());
   private final ResourceLoader resourceLoader;
 
   // private final BedrockMistralAiChatModel model;
@@ -68,6 +71,9 @@ public class IngredientService {
   @Getter
   private final List<String> supportedImageFormat = Arrays.asList("jpg", "jpeg", "png");
 
+  @Getter
+  private final List<Class<? extends Throwable>> retryableExceptions = Arrays.asList(JsonParseException.class, IOException.class);
+
   public static boolean isValidJSON(String jsonString) {
     try {
       new JSONObject(jsonString);
@@ -81,7 +87,7 @@ public class IngredientService {
     return true;
   }
 
-  public IngredientService(Environment environment, ResourceLoader resourceLoader) throws IOException {
+  public IngredientService(Environment environment, ResourceLoader resourceLoader) {
     this.resourceLoader = resourceLoader;
     prompt = this.getPrompt();
     OPEN_AI_API_KEY = environment.getRequiredProperty("openai.api.key", String.class);
@@ -126,29 +132,42 @@ public class IngredientService {
         content.append(line).append(System.lineSeparator());
       }
     } catch (Exception e) {
-      e.printStackTrace();
+      LOGGER.severe("Couldn't get prompt from prompt file for ingredient analysis:" + e);
     }
 
     return content.toString();
   }
 
-  @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 100))
-  public List<IngredientHealthDataDTO> getIngredientHealthData(MultipartFile image) throws AiResponseFailureException, IOException {
-    UserMessage userMessage = UserMessage.from(
-      TextContent.from(prompt),
-      ImageContent.from(
-        Base64.getEncoder().encodeToString(image.getBytes()),
-        MimeTypeUtils.parseMimeType(
-          Objects.requireNonNull(image.getContentType()))
-            .toString(),
-        DetailLevel.AUTO));
+  public List<IngredientHealthDataDTO> getIngredientHealthData(MultipartFile image) throws AiResponseFailureException {
+    int retryAttempt = 1;
+    boolean retry = true;
 
-    String result = openAiModel.generate(userMessage).content().text();
-    ObjectMapper objectMapper = new ObjectMapper();
-    List<IngredientHealthDataDTO> ingredientHealthDataDTOs = Collections.emptyList();
-    ingredientHealthDataDTOs = objectMapper.readValue(result, new TypeReference<List<IngredientHealthDataDTO>>() {});
+    while (retry) {
+      try {
+        UserMessage userMessage = UserMessage.from(
+            TextContent.from(prompt),
+            ImageContent.from(
+                Base64.getEncoder().encodeToString(image.getBytes()),
+                MimeTypeUtils.parseMimeType(
+                        Objects.requireNonNull(image.getContentType()))
+                    .toString(),
+                DetailLevel.AUTO));
 
-    return ingredientHealthDataDTOs;
+        String result = openAiModel.generate(userMessage).content().text();
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<IngredientHealthDataDTO> ingredientHealthDataDTOs = Collections.emptyList();
+        ingredientHealthDataDTOs = objectMapper.readValue(result, new TypeReference<List<IngredientHealthDataDTO>>() {
+        });
+        return ingredientHealthDataDTOs;
+      } catch (Exception e) {
+        if (retryableExceptions.contains(e.getClass()) && retryAttempt < 4) {
+          retryAttempt += 1;
+        } else {
+          retry = false;
+        }
+      }
+    }
+    throw new AiResponseFailureException("Failed to identify response from LLM. Please try again!");
   }
 
   /**
@@ -161,8 +180,9 @@ public class IngredientService {
    * @throws IOException when image does not have any bytes in it.
    * @throws UnsupportedMediaFileException when provided image format is not supported
    */
+//  @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 100))
   public IngredientExplanationResultDTO explainIngredient(MultipartFile image)
-      throws AiResponseFailureException, IOException, UnsupportedMediaFileException {
+      throws AiResponseFailureException, UnsupportedMediaFileException {
 
     if (!isFileFormatSupported(image)) {
       throw new UnsupportedMediaFileException("Unsupported image format. Image file must be in 'jpg', 'jpeg', or 'png' format.");
@@ -234,8 +254,8 @@ public class IngredientService {
     return false;
   }
 
-  @Recover
-  public void recover(Throwable t, MultipartFile image) throws AiResponseFailureException {
-    throw new AiResponseFailureException("Failed to identify response from LLM. Please try again!");
-  }
+//  @Recover
+//  public void recover(Throwable t, MultipartFile image) throws AiResponseFailureException {
+//    throw new AiResponseFailureException(");
+//  }
 }
